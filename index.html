@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Futuristic Temp Mail & Password</title>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
+
+    body {
+        margin: 0;
+        font-family: 'Orbitron', sans-serif;
+        background: radial-gradient(circle at 50% 50%, #0f0c29, #302b63, #24243e);
+        color: #00ffea;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+    }
+
+    h1 {
+        margin-top: 30px;
+        text-shadow: 0 0 5px #00ffe5, 0 0 20px #00ffe5, 0 0 30px #00aaff;
+        font-size: 3rem;
+        color: #00ffea;
+    }
+
+    .container {
+        width: 90%;
+        max-width: 800px;
+        margin-top: 30px;
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+    }
+
+    .card {
+        background: rgba(0,0,0,0.4);
+        border: 1px solid #00ffea;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 0 15px #00ffea, 0 0 40px #00aaff;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        position: relative;
+    }
+
+    .card h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        color: #00ffea;
+        text-shadow: 0 0 5px #00ffe5, 0 0 10px #00aaff;
+    }
+
+    .btn {
+        background: linear-gradient(90deg, #00ffea, #00aaff);
+        border: none;
+        padding: 10px 20px;
+        color: #000;
+        font-weight: bold;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: 0.3s;
+        box-shadow: 0 0 10px #00ffea, 0 0 20px #00aaff;
+    }
+
+    .btn:hover {
+        box-shadow: 0 0 20px #00ffea, 0 0 40px #00aaff, 0 0 60px #00ffea;
+        transform: translateY(-2px);
+    }
+
+    .mail-list, .password-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .mail-item, .password-item {
+        background: rgba(0,0,0,0.5);
+        border-radius: 8px;
+        padding: 10px;
+        display: flex;
+        flex-direction: column; /* 縦並び */
+        gap: 5px;
+        border: 1px solid #00ffea;
+        box-shadow: 0 0 10px #00ffea;
+    }
+
+    .code {
+        font-weight: bold;
+        color: #ffea00;
+    }
+
+    .link-btn {
+        background: #00ffea;
+        color: #000;
+        padding: 5px 10px;
+        border-radius: 5px;
+        text-decoration: none;
+        font-weight: bold;
+        box-shadow: 0 0 10px #00ffea;
+    }
+
+    .link-btn:hover {
+        box-shadow: 0 0 20px #00ffea, 0 0 30px #00aaff;
+    }
+</style>
+</head>
+<body>
+<h1>🌌 Futuristic Temp Mail & Password</h1>
+<div class="container">
+
+    <!-- Temp Mail -->
+    <div class="card" id="tempMailCard">
+        <h2>📩 Temp Mail</h2>
+        <button class="btn" onclick="generateMail()">Generate Email</button>
+        <div class="mail-list" id="mailList"></div>
+    </div>
+
+    <!-- Password Generator -->
+    <div class="card" id="passwordCard">
+        <h2>🔐 Password Generator</h2>
+        <button class="btn" onclick="generatePassword()">Generate Password</button>
+        <div class="password-list" id="passwordList"></div>
+    </div>
+
+</div>
+
+<script>
+    const mailListEl = document.getElementById('mailList');
+    const passwordListEl = document.getElementById('passwordList');
+    let mails = [];
+    let passwords = [];
+
+    function generateMail() {
+        if (mails.length >= 2) {
+            alert("You can only create 2 temp emails!");
+            return;
+        }
+
+        const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+        let username = '';
+        for (let i = 0; i < 10; i++) username += chars[Math.floor(Math.random() * chars.length)];
+        const address = username + '@sharebot.net';
+        const password = 'Pass1234!';
+
+        const mailObj = {address, password};
+        mails.push(mailObj);
+        renderMails();
+    }
+
+    function renderMails() {
+        mailListEl.innerHTML = '';
+        mails.forEach((m, i) => {
+            const div = document.createElement('div');
+            div.className = 'mail-item';
+            div.innerHTML = `
+                <span class="code">${m.address}</span>
+                <span>${m.password}</span>
+                <button class="btn" onclick="deleteMail(${i})">Delete Email</button>
+            `;
+            mailListEl.appendChild(div);
+        });
+    }
+
+    function deleteMail(index) {
+        mails.splice(index, 1);
+        renderMails();
+    }
+
+    function generatePassword() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        const blocks = 3;
+        const blockLength = 6;
+        let pw = [];
+        for (let b = 0; b < blocks; b++) {
+            let block = '';
+            for (let i = 0; i < blockLength; i++) {
+                block += chars[Math.floor(Math.random() * chars.length)];
+            }
+            pw.push(block);
+        }
+        const password = pw.join('-');
+        passwords.push(password);
+        renderPasswords();
+    }
+
+    function renderPasswords() {
+        passwordListEl.innerHTML = '';
+        passwords.slice(-10).forEach((p) => {
+            const div = document.createElement('div');
+            div.className = 'password-item';
+            div.textContent = p;
+            passwordListEl.appendChild(div);
+        });
+    }
+</script>
+</body>
+</html>
