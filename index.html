@@ -5,65 +5,44 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Temp Mail Futuristic</title>
 <style>
-    body {
-        margin: 0;
-        font-family: 'Orbitron', sans-serif;
-        background: linear-gradient(160deg, #0f0c29, #302b63, #24243e);
-        color: #fff;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 20px;
-    }
-    h1 { margin-bottom: 20px; }
+body {
+    margin: 0;
+    font-family: 'Orbitron', sans-serif;
+    background: linear-gradient(160deg, #0f0c29, #302b63, #24243e);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+}
+h1 { margin-bottom: 20px; }
 
-    button {
-        background: rgba(255,255,255,0.1);
-        border: 1px solid #0ff;
-        color: #0ff;
-        padding: 5px 12px;
-        margin-left: 5px;
-        cursor: pointer;
-        border-radius: 5px;
-        transition: 0.2s;
-        font-family: 'Orbitron', sans-serif;
-    }
-    button:hover {
-        background: rgba(0,255,255,0.2);
-    }
+button {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid #0ff;
+    color: #0ff;
+    padding: 5px 12px;
+    margin-left: 5px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: 0.2s;
+    font-family: 'Orbitron', sans-serif;
+}
+button:hover { background: rgba(0,255,255,0.2); }
 
-    .container {
-        width: 100%;
-        max-width: 800px;
-        margin-bottom: 30px;
-    }
-
-    .mail-item, .password-item {
-        display: flex;
-        justify-content: space-between;
-        background: rgba(0,255,255,0.05);
-        border: 1px solid #0ff;
-        padding: 8px;
-        margin-bottom: 5px;
-        border-radius: 5px;
-        overflow-x: auto;
-    }
-
-    .mail-log {
-        width: 100%;
-        height: 300px;
-        overflow-y: scroll;
-        background: rgba(0,255,255,0.05);
-        border: 1px solid #0ff;
-        padding: 10px;
-        border-radius: 5px;
-    }
-
-    .mail-log-item {
-        margin-bottom: 5px;
-        border-bottom: 1px solid rgba(0,255,255,0.2);
-        padding-bottom: 3px;
-    }
+.container { width: 100%; max-width: 800px; margin-bottom: 30px; }
+.mail-item, .password-item {
+    display: flex;
+    justify-content: space-between;
+    background: rgba(0,255,255,0.05);
+    border: 1px solid #0ff;
+    padding: 8px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+    overflow-x: auto;
+}
+.mail-log { width: 100%; height: 300px; overflow-y: scroll; background: rgba(0,255,255,0.05); border: 1px solid #0ff; padding: 10px; border-radius: 5px; }
+.mail-log-item { margin-bottom: 5px; border-bottom: 1px solid rgba(0,255,255,0.2); padding-bottom: 3px; word-break: break-word; }
 </style>
 </head>
 <body>
@@ -73,7 +52,7 @@
 <div class="container">
     <h2>Generated Emails</h2>
     <div id="mailList"></div>
-    <button onclick="generateMail()">Create Temp Email</button>
+    <button onclick="createMail()">Create Temp Email</button>
 </div>
 
 <div class="container">
@@ -102,85 +81,87 @@ renderPasswords();
 renderMailLog();
 
 // ===============================
-// メール生成
+// メール作成とAPI登録
 // ===============================
-function generateMail() {
-    if (mails.length >= 2) {
-        alert("You can only create 2 temp emails!");
-        return;
-    }
+async function createMail() {
+    if (mails.length >= 2) { alert("Max 2 temp emails!"); return; }
 
-    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    let username = '';
-    for (let i = 0; i < 10; i++) {
-        username += chars[Math.floor(Math.random() * chars.length)];
-    }
-
-    const address = username + '@sharebot.net';
+    const username = Array.from({length:10},()=>Math.random().toString(36)[2]).join('');
+    const address = username+'@sharebot.net';
     const password = 'Pass1234!';
 
-    mails.push({address, password});
-    localStorage.setItem('mails', JSON.stringify(mails));
-    renderMails();
+    try {
+        // アカウント作成
+        const r = await fetch('https://api.mail.tm/accounts', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({address,password})
+        });
+        if (r.status!==201) { alert("Mail create failed"); return; }
+
+        // トークン取得
+        const t = await fetch('https://api.mail.tm/token',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({address,password})
+        });
+        const tokenData = await t.json();
+        if (!tokenData.token) { alert("Token fail"); return; }
+
+        mails.push({address,password,token:tokenData.token,last_ids:[]});
+        localStorage.setItem('mails',JSON.stringify(mails));
+        renderMails();
+    } catch(e){console.error(e); alert("Error creating mail");}
 }
 
 // ===============================
 // メール表示
 // ===============================
 function renderMails() {
-    mailListEl.innerHTML = '';
-    mails.forEach((m, i) => {
-        const div = document.createElement('div');
-        div.className = 'mail-item';
-        div.innerHTML = `
+    mailListEl.innerHTML='';
+    mails.forEach((m,i)=>{
+        const div=document.createElement('div');
+        div.className='mail-item';
+        div.innerHTML=`
             <span>${m.address}</span>
             <span>${m.password}</span>
             <div>
                 <button onclick="copyToClipboard('${m.address}')">Copy Email</button>
                 <button onclick="copyToClipboard('${m.password}')">Copy Password</button>
                 <button onclick="deleteMail(${i})">Delete Email</button>
-            </div>
-        `;
+            </div>`;
         mailListEl.appendChild(div);
     });
 }
 
-function deleteMail(index) {
-    mails.splice(index, 1);
-    localStorage.setItem('mails', JSON.stringify(mails));
+function deleteMail(index){
+    mails.splice(index,1);
+    localStorage.setItem('mails',JSON.stringify(mails));
     renderMails();
 }
 
 // ===============================
 // パスワード生成
 // ===============================
-function generatePassword() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let pw = [];
-
-    for (let b = 0; b < 3; b++) {
-        let block = '';
-        for (let i = 0; i < 6; i++) {
-            block += chars[Math.floor(Math.random() * chars.length)];
-        }
-        pw.push(block);
+function generatePassword(){
+    const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let blocks=[];
+    for(let b=0;b<3;b++){
+        let block='';for(let i=0;i<6;i++){block+=chars[Math.floor(Math.random()*chars.length)];}
+        blocks.push(block);
     }
-
-    const password = pw.join('-');
+    const password = blocks.join('-');
     passwords.push(password);
-    localStorage.setItem('passwords', JSON.stringify(passwords));
+    localStorage.setItem('passwords',JSON.stringify(passwords));
     renderPasswords();
 }
 
-function renderPasswords() {
-    passwordListEl.innerHTML = '';
-    passwords.slice(-10).forEach(p => {
-        const div = document.createElement('div');
-        div.className = 'password-item';
-        div.innerHTML = `
-            <span>${p}</span>
-            <button onclick="copyToClipboard('${p}')">Copy Password</button>
-        `;
+function renderPasswords(){
+    passwordListEl.innerHTML='';
+    passwords.slice(-10).forEach(p=>{
+        const div=document.createElement('div');
+        div.className='password-item';
+        div.innerHTML=`<span>${p}</span><button onclick="copyToClipboard('${p}')">Copy Password</button>`;
         passwordListEl.appendChild(div);
     });
 }
@@ -188,49 +169,54 @@ function renderPasswords() {
 // ===============================
 // コピー
 // ===============================
-function copyToClipboard(text) {
+function copyToClipboard(text){
     navigator.clipboard.writeText(text);
     alert(`Copied: ${text}`);
 }
 
 // ===============================
-// メール受信
+// メール取得
 // ===============================
-function receiveMailFor(address, subject, content) {
-    const exists = mails.some(m => m.address === address);
-    if (!exists) return;
+async function fetchMail() {
+    for(const m of mails){
+        try{
+            const res=await fetch('https://api.mail.tm/messages',{headers:{'Authorization':'Bearer '+m.token}});
+            if(res.status!==200) continue;
+            const data = await res.json();
+            const messages = data['hydra:member'] || [];
+            for(const msg of messages){
+                if(m.last_ids.includes(msg.id)) continue;
+                m.last_ids.push(msg.id);
 
-    mailLog.unshift(`[${subject}] ${content}`);
-    localStorage.setItem('mailLog', JSON.stringify(mailLog));
+                const detail = await fetch(`https://api.mail.tm/messages/${msg.id}`,{headers:{'Authorization':'Bearer '+m.token}});
+                const content = await detail.json();
+                const text = content.text||content.html||'';
+
+                mailLog.unshift(`[${content.subject||'No Subject'}] ${text}`);
+            }
+        }catch(e){console.error(e);}
+    }
+    localStorage.setItem('mailLog',JSON.stringify(mailLog));
     renderMailLog();
 }
 
-function renderMailLog() {
-    mailLogEl.innerHTML = '';
-    mailLog.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'mail-log-item';
-        div.textContent = item;
+function renderMailLog(){
+    mailLogEl.innerHTML='';
+    mailLog.forEach(item=>{
+        const div=document.createElement('div');
+        div.className='mail-log-item';
+        div.textContent=item;
         mailLogEl.appendChild(div);
     });
 }
 
-function refreshLog() {
-    renderMailLog();
-}
+function refreshLog(){ renderMailLog(); }
 
 // ===============================
-// ページロード時にダミー受信（例として登録メアドだけ受信可能）
+// 自動取得
 // ===============================
-setInterval(() => {
-    mails.forEach(m => {
-        if (Math.random() < 0.01) { // ランダムでメール受信例
-            receiveMailFor(m.address, "Verification Code", "Code: 1234");
-        }
-    });
-}, 5000);
+setInterval(fetchMail,5000);
 
 </script>
-
 </body>
 </html>
