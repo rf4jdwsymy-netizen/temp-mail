@@ -85,6 +85,7 @@
 <div class="container">
     <h2>Mail Log</h2>
     <div id="mailLog" class="mail-log"></div>
+    <button onclick="refreshLog()">Update Mail Log</button>
 </div>
 
 <script>
@@ -92,8 +93,13 @@ const mailListEl = document.getElementById('mailList');
 const passwordListEl = document.getElementById('passwordList');
 const mailLogEl = document.getElementById('mailLog');
 
-let mails = [];
-let passwords = [];
+let mails = JSON.parse(localStorage.getItem('mails') || '[]');
+let passwords = JSON.parse(localStorage.getItem('passwords') || '[]');
+let mailLog = JSON.parse(localStorage.getItem('mailLog') || '[]');
+
+renderMails();
+renderPasswords();
+renderMailLog();
 
 // ===============================
 // メール生成
@@ -114,11 +120,12 @@ function generateMail() {
     const password = 'Pass1234!';
 
     mails.push({address, password});
+    localStorage.setItem('mails', JSON.stringify(mails));
     renderMails();
 }
 
 // ===============================
-// 表示
+// メール表示
 // ===============================
 function renderMails() {
     mailListEl.innerHTML = '';
@@ -129,8 +136,9 @@ function renderMails() {
             <span>${m.address}</span>
             <span>${m.password}</span>
             <div>
+                <button onclick="copyToClipboard('${m.address}')">Copy Email</button>
+                <button onclick="copyToClipboard('${m.password}')">Copy Password</button>
                 <button onclick="deleteMail(${i})">Delete Email</button>
-                <button onclick="testReceive(${i})">Receive Mail</button>
             </div>
         `;
         mailListEl.appendChild(div);
@@ -139,29 +147,8 @@ function renderMails() {
 
 function deleteMail(index) {
     mails.splice(index, 1);
+    localStorage.setItem('mails', JSON.stringify(mails));
     renderMails();
-}
-
-// ===============================
-// 手動受信（登録メールのみ）
-// ===============================
-function testReceive(index) {
-    const m = mails[index];
-    if (!m) return;
-    receiveMailFor(m.address, "Verification Code", "Code: 1234");
-}
-
-// ===============================
-// 受信処理（登録したメアドだけ）
-// ===============================
-function receiveMailFor(address, subject, content) {
-    const exists = mails.some(m => m.address === address);
-    if (!exists) return;
-
-    const div = document.createElement('div');
-    div.className = 'mail-log-item';
-    div.textContent = `[${subject}] ${content}`;
-    mailLogEl.prepend(div);
 }
 
 // ===============================
@@ -181,6 +168,7 @@ function generatePassword() {
 
     const password = pw.join('-');
     passwords.push(password);
+    localStorage.setItem('passwords', JSON.stringify(passwords));
     renderPasswords();
 }
 
@@ -189,10 +177,59 @@ function renderPasswords() {
     passwords.slice(-10).forEach(p => {
         const div = document.createElement('div');
         div.className = 'password-item';
-        div.textContent = p;
+        div.innerHTML = `
+            <span>${p}</span>
+            <button onclick="copyToClipboard('${p}')">Copy Password</button>
+        `;
         passwordListEl.appendChild(div);
     });
 }
+
+// ===============================
+// コピー
+// ===============================
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text);
+    alert(`Copied: ${text}`);
+}
+
+// ===============================
+// メール受信
+// ===============================
+function receiveMailFor(address, subject, content) {
+    const exists = mails.some(m => m.address === address);
+    if (!exists) return;
+
+    mailLog.unshift(`[${subject}] ${content}`);
+    localStorage.setItem('mailLog', JSON.stringify(mailLog));
+    renderMailLog();
+}
+
+function renderMailLog() {
+    mailLogEl.innerHTML = '';
+    mailLog.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'mail-log-item';
+        div.textContent = item;
+        mailLogEl.appendChild(div);
+    });
+}
+
+function refreshLog() {
+    renderMailLog();
+}
+
+// ===============================
+// ページロード時にダミー受信（例として登録メアドだけ受信可能）
+// ===============================
+setInterval(() => {
+    mails.forEach(m => {
+        if (Math.random() < 0.01) { // ランダムでメール受信例
+            receiveMailFor(m.address, "Verification Code", "Code: 1234");
+        }
+    });
+}, 5000);
+
 </script>
 
 </body>
