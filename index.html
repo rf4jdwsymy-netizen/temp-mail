@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Temp Mail Futuristic</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
 <style>
 body {
     margin: 0;
@@ -25,24 +26,47 @@ button {
     margin-left: 5px;
     cursor: pointer;
     border-radius: 5px;
-    transition: 0.2s;
+    transition: all 0.3s ease;
     font-family: 'Orbitron', sans-serif;
 }
-button:hover { background: rgba(0,255,255,0.2); }
+button:hover {
+    background: rgba(0,255,255,0.3);
+    transform: scale(1.05);
+}
 
 .container { width: 100%; max-width: 800px; margin-bottom: 30px; }
+
 .mail-item, .password-item {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     background: rgba(0,255,255,0.05);
     border: 1px solid #0ff;
     padding: 8px;
     margin-bottom: 5px;
     border-radius: 5px;
     overflow-x: auto;
+    animation: fadeIn 0.6s ease forwards;
 }
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 .mail-log { width: 100%; height: 300px; overflow-y: scroll; background: rgba(0,255,255,0.05); border: 1px solid #0ff; padding: 10px; border-radius: 5px; }
-.mail-log-item { margin-bottom: 5px; border-bottom: 1px solid rgba(0,255,255,0.2); padding-bottom: 3px; word-break: break-word; }
+.mail-log-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(0,255,255,0.2);
+    padding: 5px 0;
+    animation: slideIn 0.5s ease forwards;
+}
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+.log-info { display: flex; flex-direction: column; }
 </style>
 </head>
 <body>
@@ -56,12 +80,6 @@ button:hover { background: rgba(0,255,255,0.2); }
 </div>
 
 <div class="container">
-    <h2>Generated Passwords</h2>
-    <div id="passwordList"></div>
-    <button onclick="generatePassword()">Create Password</button>
-</div>
-
-<div class="container">
     <h2>Mail Log</h2>
     <div id="mailLog" class="mail-log"></div>
     <button onclick="refreshLog()">Update Mail Log</button>
@@ -69,15 +87,12 @@ button:hover { background: rgba(0,255,255,0.2); }
 
 <script>
 const mailListEl = document.getElementById('mailList');
-const passwordListEl = document.getElementById('passwordList');
 const mailLogEl = document.getElementById('mailLog');
 
 let mails = JSON.parse(localStorage.getItem('mails') || '[]');
-let passwords = JSON.parse(localStorage.getItem('passwords') || '[]');
 let mailLog = JSON.parse(localStorage.getItem('mailLog') || '[]');
 
 renderMails();
-renderPasswords();
 renderMailLog();
 
 // ===============================
@@ -91,7 +106,6 @@ async function createMail() {
     const password = 'Pass1234!';
 
     try {
-        // アカウント作成
         const r = await fetch('https://api.mail.tm/accounts', {
             method:'POST',
             headers:{'Content-Type':'application/json'},
@@ -99,7 +113,6 @@ async function createMail() {
         });
         if (r.status!==201) { alert("Mail create failed"); return; }
 
-        // トークン取得
         const t = await fetch('https://api.mail.tm/token',{
             method:'POST',
             headers:{'Content-Type':'application/json'},
@@ -141,32 +154,6 @@ function deleteMail(index){
 }
 
 // ===============================
-// パスワード生成
-// ===============================
-function generatePassword(){
-    const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let blocks=[];
-    for(let b=0;b<3;b++){
-        let block='';for(let i=0;i<6;i++){block+=chars[Math.floor(Math.random()*chars.length)];}
-        blocks.push(block);
-    }
-    const password = blocks.join('-');
-    passwords.push(password);
-    localStorage.setItem('passwords',JSON.stringify(passwords));
-    renderPasswords();
-}
-
-function renderPasswords(){
-    passwordListEl.innerHTML='';
-    passwords.slice(-10).forEach(p=>{
-        const div=document.createElement('div');
-        div.className='password-item';
-        div.innerHTML=`<span>${p}</span><button onclick="copyToClipboard('${p}')">Copy Password</button>`;
-        passwordListEl.appendChild(div);
-    });
-}
-
-// ===============================
 // コピー
 // ===============================
 function copyToClipboard(text){
@@ -175,7 +162,7 @@ function copyToClipboard(text){
 }
 
 // ===============================
-// メール取得
+// メール取得と表示（タイトル・件名・リンク・時間のみ）
 // ===============================
 async function fetchMail() {
     for(const m of mails){
@@ -191,8 +178,16 @@ async function fetchMail() {
                 const detail = await fetch(`https://api.mail.tm/messages/${msg.id}`,{headers:{'Authorization':'Bearer '+m.token}});
                 const content = await detail.json();
                 const text = content.text||content.html||'';
+                const urls = (text.match(/https?:\/\/\S+/g) || []);
+                const firstUrl = urls[0] || '#';
 
-                mailLog.unshift(`[${content.subject||'No Subject'}] ${text}`);
+                // ログに追加（最新上）
+                mailLog.unshift({
+                    title: content.from?.name || content.from?.address || 'Unknown',
+                    subject: content.subject || 'No Subject',
+                    url: firstUrl,
+                    time: new Date(content.createdAt).toLocaleString()
+                });
             }
         }catch(e){console.error(e);}
     }
@@ -205,7 +200,13 @@ function renderMailLog(){
     mailLog.forEach(item=>{
         const div=document.createElement('div');
         div.className='mail-log-item';
-        div.textContent=item;
+        div.innerHTML=`
+            <div class="log-info">
+                <strong>${item.title}</strong>
+                <span>${item.subject}</span>
+                <span>${item.time}</span>
+            </div>
+            <button onclick="window.open('${item.url}','_blank')">Open Link</button>`;
         mailLogEl.appendChild(div);
     });
 }
@@ -216,7 +217,6 @@ function refreshLog(){ renderMailLog(); }
 // 自動取得
 // ===============================
 setInterval(fetchMail,5000);
-
 </script>
 </body>
 </html>
