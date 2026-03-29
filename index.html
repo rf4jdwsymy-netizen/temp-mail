@@ -3,144 +3,123 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Temp Mail & Password</title>
+<title>Temp Mail Futuristic</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
+    body {
+        margin: 0;
+        font-family: 'Orbitron', sans-serif;
+        background: linear-gradient(160deg, #0f0c29, #302b63, #24243e);
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+    }
+    h1 { margin-bottom: 20px; }
 
-body {
-    margin: 0;
-    font-family: 'Orbitron', sans-serif;
-    background: radial-gradient(circle at 50% 50%, rgba(15,12,41,0.8), rgba(48,43,99,0.8), rgba(36,36,62,0.8));
-    color: #00ffea;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 100vh;
-}
+    button {
+        background: rgba(255,255,255,0.1);
+        border: 1px solid #0ff;
+        color: #0ff;
+        padding: 5px 12px;
+        margin-left: 5px;
+        cursor: pointer;
+        border-radius: 5px;
+        transition: 0.2s;
+        font-family: 'Orbitron', sans-serif;
+    }
+    button:hover {
+        background: rgba(0,255,255,0.2);
+    }
 
-h1 { margin-top: 20px; font-size: 2.5rem; color: #00ffea; text-shadow: 0 0 5px #00ffe5, 0 0 10px #00aaff; }
+    .container {
+        width: 100%;
+        max-width: 800px;
+        margin-bottom: 30px;
+    }
 
-.container {
-    width: 90%;
-    max-width: 900px;
-    margin-top: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 25px;
-}
+    .mail-item, .password-item {
+        display: flex;
+        justify-content: space-between;
+        background: rgba(0,255,255,0.05);
+        border: 1px solid #0ff;
+        padding: 8px;
+        margin-bottom: 5px;
+        border-radius: 5px;
+        overflow-x: auto;
+    }
 
-.card {
-    background: rgba(0,0,0,0.3);
-    border: 1px solid rgba(0,255,234,0.5);
-    border-radius: 15px;
-    padding: 20px;
-    box-shadow: 0 0 15px rgba(0,255,234,0.5), 0 0 30px rgba(0,170,255,0.5);
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
+    .mail-log {
+        width: 100%;
+        height: 300px;
+        overflow-y: scroll;
+        background: rgba(0,255,255,0.05);
+        border: 1px solid #0ff;
+        padding: 10px;
+        border-radius: 5px;
+    }
 
-.card h2 { margin: 0; font-size: 1.5rem; color: #00ffea; }
-
-.btn {
-    background: linear-gradient(90deg, #00ffea, #00aaff);
-    border: none;
-    padding: 10px 20px;
-    color: #000;
-    font-weight: bold;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: 0.3s;
-    box-shadow: 0 0 10px #00ffea, 0 0 20px #00aaff;
-}
-
-.btn:hover {
-    box-shadow: 0 0 20px #00ffea, 0 0 40px #00aaff, 0 0 60px #00ffea;
-    transform: translateY(-2px);
-}
-
-.mail-list, .password-list, .mail-log {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.mail-item, .password-item, .mail-log-item {
-    background: rgba(0,0,0,0.4);
-    border-radius: 8px;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    border: 1px solid rgba(0,255,234,0.5);
-    box-shadow: 0 0 10px rgba(0,255,234,0.5);
-}
-
-.mail-log {
-    max-height: 300px;
-    overflow-y: auto;
-    background: rgba(0,0,0,0.2);
-    border: 1px solid rgba(0,255,234,0.5);
-    border-radius: 8px;
-    padding: 10px;
-    gap: 5px;
-}
-
-.mail-log-item {
-    background: rgba(0,0,0,0.3);
-    border: 1px solid rgba(0,255,234,0.3);
-    padding: 5px 10px;
-    border-radius: 5px;
-    font-size: 0.9rem;
-    color: #00ffea;
-}
+    .mail-log-item {
+        margin-bottom: 5px;
+        border-bottom: 1px solid rgba(0,255,255,0.2);
+        padding-bottom: 3px;
+    }
 </style>
 </head>
 <body>
-<h1>Temp Mail & Password</h1>
+
+<h1>Temp Mail System</h1>
+
 <div class="container">
+    <h2>Generated Emails</h2>
+    <div id="mailList"></div>
+    <button onclick="generateMail()">Create Temp Email</button>
+</div>
 
-    <!-- Temp Mail -->
-    <div class="card">
-        <h2>Temp Mail</h2>
-        <button class="btn" onclick="generateMail()">Generate Email</button>
-        <div class="mail-list" id="mailList"></div>
-    </div>
+<div class="container">
+    <h2>Generated Passwords</h2>
+    <div id="passwordList"></div>
+    <button onclick="generatePassword()">Create Password</button>
+</div>
 
-    <!-- Received Mail Log -->
-    <div class="card">
-        <h2>Received Emails</h2>
-        <div class="mail-log" id="mailLog"></div>
-    </div>
-
-    <!-- Password Generator -->
-    <div class="card">
-        <h2>Password Generator</h2>
-        <button class="btn" onclick="generatePassword()">Generate Password</button>
-        <div class="password-list" id="passwordList"></div>
-    </div>
-
+<div class="container">
+    <h2>Mail Log</h2>
+    <div id="mailLog" class="mail-log"></div>
 </div>
 
 <script>
 const mailListEl = document.getElementById('mailList');
 const passwordListEl = document.getElementById('passwordList');
 const mailLogEl = document.getElementById('mailLog');
+
 let mails = [];
 let passwords = [];
 
+// ===============================
 // メール生成
+// ===============================
 function generateMail() {
-    if (mails.length >= 2) { alert("You can only create 2 temp emails!"); return; }
+    if (mails.length >= 2) {
+        alert("You can only create 2 temp emails!");
+        return;
+    }
+
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
     let username = '';
-    for (let i = 0; i < 10; i++) username += chars[Math.floor(Math.random() * chars.length)];
+    for (let i = 0; i < 10; i++) {
+        username += chars[Math.floor(Math.random() * chars.length)];
+    }
+
     const address = username + '@sharebot.net';
     const password = 'Pass1234!';
+
     mails.push({address, password});
     renderMails();
 }
 
+// ===============================
+// 表示
+// ===============================
 function renderMails() {
     mailListEl.innerHTML = '';
     mails.forEach((m, i) => {
@@ -149,7 +128,10 @@ function renderMails() {
         div.innerHTML = `
             <span>${m.address}</span>
             <span>${m.password}</span>
-            <button class="btn" onclick="deleteMail(${i})">Delete Email</button>
+            <div>
+                <button onclick="deleteMail(${i})">Delete Email</button>
+                <button onclick="testReceive(${i})">Receive Mail</button>
+            </div>
         `;
         mailListEl.appendChild(div);
     });
@@ -160,19 +142,43 @@ function deleteMail(index) {
     renderMails();
 }
 
+// ===============================
+// 手動受信（登録メールのみ）
+// ===============================
+function testReceive(index) {
+    const m = mails[index];
+    if (!m) return;
+    receiveMailFor(m.address, "Verification Code", "Code: 1234");
+}
+
+// ===============================
+// 受信処理（登録したメアドだけ）
+// ===============================
+function receiveMailFor(address, subject, content) {
+    const exists = mails.some(m => m.address === address);
+    if (!exists) return;
+
+    const div = document.createElement('div');
+    div.className = 'mail-log-item';
+    div.textContent = `[${subject}] ${content}`;
+    mailLogEl.prepend(div);
+}
+
+// ===============================
 // パスワード生成
+// ===============================
 function generatePassword() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    const blocks = 3;
-    const blockLength = 6;
     let pw = [];
-    for (let b = 0; b < blocks; b++) {
+
+    for (let b = 0; b < 3; b++) {
         let block = '';
-        for (let i = 0; i < blockLength; i++) {
+        for (let i = 0; i < 6; i++) {
             block += chars[Math.floor(Math.random() * chars.length)];
         }
         pw.push(block);
     }
+
     const password = pw.join('-');
     passwords.push(password);
     renderPasswords();
@@ -180,34 +186,14 @@ function generatePassword() {
 
 function renderPasswords() {
     passwordListEl.innerHTML = '';
-    passwords.slice(-10).forEach((p) => {
+    passwords.slice(-10).forEach(p => {
         const div = document.createElement('div');
         div.className = 'password-item';
         div.textContent = p;
         passwordListEl.appendChild(div);
     });
 }
-
-// 擬似受信メール（登録したメールのみ対象）
-function receiveMailFor(address, subject, content) {
-    const mailExists = mails.some(m => m.address === address);
-    if (!mailExists) return; // 登録してないメアドには送らない
-    const div = document.createElement('div');
-    div.className = 'mail-log-item';
-    div.textContent = `[${subject}] ${content}`;
-    mailLogEl.prepend(div);
-}
-
-// デモ用：登録メールにランダム受信
-setInterval(() => {
-    if (mails.length > 0) {
-        const subjects = ["Welcome", "Verification Code", "Alert"];
-        const codes = ["1234", "ABCD", "5678EF"];
-        const idx = Math.floor(Math.random() * subjects.length);
-        receiveMailFor(mails[0].address, subjects[idx], `Code: ${codes[idx]} for ${mails[0].address}`);
-    }
-}, 3000);
-
 </script>
+
 </body>
 </html>
