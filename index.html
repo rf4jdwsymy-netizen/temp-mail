@@ -2,233 +2,64 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Temp Mail Futuristic</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
+<title>Terms of Service</title>
 <style>
 body {
-    margin: 0;
-    font-family: 'Orbitron', sans-serif;
-    background: linear-gradient(160deg, #0f0c29, #302b63, #24243e);
-    color: #fff;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px;
+  background: linear-gradient(135deg, #2b0a3d, #5a189a);
+  color: white;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
 }
-h1 { margin-bottom: 20px; }
-
-button {
-    background: rgba(255,255,255,0.1);
-    border: 1px solid #0ff;
-    color: #0ff;
-    padding: 5px 12px;
-    margin-left: 5px;
-    cursor: pointer;
-    border-radius: 5px;
-    transition: all 0.3s ease;
-    font-family: 'Orbitron', sans-serif;
+.container {
+  max-width: 900px;
+  margin: auto;
+  padding: 40px;
 }
-button:hover {
-    background: rgba(0,255,255,0.3);
-    transform: scale(1.05);
+h1 {
+  text-align: center;
+  color: #c77dff;
 }
-
-.container { width: 100%; max-width: 800px; margin-bottom: 30px; }
-
-.mail-item, .password-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: rgba(0,255,255,0.05);
-    border: 1px solid #0ff;
-    padding: 8px;
-    margin-bottom: 5px;
-    border-radius: 5px;
-    overflow-x: auto;
+.section {
+  margin-bottom: 25px;
 }
-.mail-item.animate, .password-item.animate {
-    animation: fadeIn 0.6s ease forwards;
+.box {
+  background: rgba(255,255,255,0.05);
+  padding: 20px;
+  border-radius: 10px;
+  backdrop-filter: blur(10px);
 }
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.mail-log { width: 100%; height: 300px; overflow-y: scroll; background: rgba(0,255,255,0.05); border: 1px solid #0ff; padding: 10px; border-radius: 5px; }
-.mail-log-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid rgba(0,255,255,0.2);
-    padding: 5px 0;
-}
-.log-info { display: flex; flex-direction: column; }
 </style>
 </head>
 <body>
-
-<h1>Temp Mail System</h1>
-
 <div class="container">
-    <h2>Generated Emails</h2>
-    <div id="mailList"></div>
-    <button onclick="createMail()">Create Temp Email</button>
+<h1>Terms of Service</h1>
+
+<div class="section box">
+<h2>1. Introduction</h2>
+<p>This Discord bot is provided "as is" without warranty of any kind.</p>
 </div>
 
-<div class="container">
-    <h2>Mail Log</h2>
-    <div id="mailLog" class="mail-log"></div>
-    <button onclick="refreshLog()">Update Mail Log</button>
+<div class="section box">
+<h2>2. Usage</h2>
+<p>You agree not to misuse the bot or use it for illegal activities.</p>
 </div>
 
-<script>
-const mailListEl = document.getElementById('mailList');
-const mailLogEl = document.getElementById('mailLog');
+<div class="section box">
+<h2>3. Availability</h2>
+<p>The bot may be updated, changed, or discontinued at any time.</p>
+</div>
 
-let mails = JSON.parse(localStorage.getItem('mails') || '[]');
-let mailLog = JSON.parse(localStorage.getItem('mailLog') || '[]');
-let animationPlayed = JSON.parse(localStorage.getItem('animationPlayed') || 'false');
+<div class="section box">
+<h2>4. Limitation of Liability</h2>
+<p>We are not responsible for any damages caused by using the bot.</p>
+</div>
 
-renderMails();
-renderMailLog();
+<div class="section box">
+<h2>5. Changes</h2>
+<p>These terms may be updated without notice.</p>
+</div>
 
-// ===============================
-// メール作成
-// ===============================
-async function createMail() {
-    if (mails.length >= 2) { alert("Max 2 temp emails!"); return; }
-
-    const username = Array.from({length:10},()=>Math.random().toString(36)[2]).join('');
-    const address = username+'@sharebot.net';
-    const password = 'Pass1234!';
-
-    try {
-        const r = await fetch('https://api.mail.tm/accounts', {
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({address,password})
-        });
-        if (r.status!==201) { alert("Mail create failed"); return; }
-
-        const t = await fetch('https://api.mail.tm/token',{
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({address,password})
-        });
-        const tokenData = await t.json();
-        if (!tokenData.token) { alert("Token fail"); return; }
-
-        mails.push({address,password,token:tokenData.token,last_ids:[]});
-        localStorage.setItem('mails',JSON.stringify(mails));
-        renderMails();
-    } catch(e){console.error(e); alert("Error creating mail");}
-}
-
-// ===============================
-// メール表示
-// ===============================
-function renderMails() {
-    mailListEl.innerHTML='';
-    mails.forEach((m,i)=>{
-        const div=document.createElement('div');
-        div.className='mail-item';
-        if(!animationPlayed) div.classList.add('animate');
-
-        div.innerHTML=`
-            <span>${m.address}</span>
-            <span>${m.password}</span>
-            <div>
-                <button onclick="copyToClipboard('${m.address}')">Copy Email</button>
-                <button onclick="copyToClipboard('${m.password}')">Copy Password</button>
-                <button onclick="deleteMail(${i})">Delete Email</button>
-            </div>`;
-        mailListEl.appendChild(div);
-    });
-    if(!animationPlayed){
-        localStorage.setItem('animationPlayed', true);
-        animationPlayed = true;
-    }
-}
-
-function deleteMail(index){
-    if(!confirm("Do you want to delete this email?")) return;
-    mails.splice(index,1);
-    localStorage.setItem('mails',JSON.stringify(mails));
-    renderMails();
-}
-
-// ===============================
-// コピー
-// ===============================
-function copyToClipboard(text){
-    navigator.clipboard.writeText(text);
-    alert(`Copied: ${text}`);
-}
-
-// ===============================
-// メール取得と表示（タイトル・件名・リンク・時間・認証コード）
-// ===============================
-async function fetchMail() {
-    for(const m of mails){
-        try{
-            const res=await fetch('https://api.mail.tm/messages',{headers:{'Authorization':'Bearer '+m.token}});
-            if(res.status!==200) continue;
-            const data = await res.json();
-            const messages = data['hydra:member'] || [];
-            for(const msg of messages){
-                if(m.last_ids.includes(msg.id)) continue;
-                m.last_ids.push(msg.id);
-
-                const detail = await fetch(`https://api.mail.tm/messages/${msg.id}`,{headers:{'Authorization':'Bearer '+m.token}});
-                const content = await detail.json();
-                const text = content.text||content.html||'';
-
-                // 認証コード抽出
-                const codeMatch = text.match(/\b\d{4,8}\b/);
-                const code = codeMatch ? codeMatch[0] : null;
-
-                const urls = code ? [] : (text.match(/https?:\/\/\S+/g) || []);
-                const firstUrl = urls[0] || '#';
-
-                mailLog.unshift({
-                    title: content.from?.name || content.from?.address || 'Unknown',
-                    subject: content.subject || 'No Subject',
-                    url: firstUrl,
-                    time: new Date(content.createdAt).toLocaleString(),
-                    code: code
-                });
-            }
-        }catch(e){console.error(e);}
-    }
-    localStorage.setItem('mailLog',JSON.stringify(mailLog));
-    renderMailLog();
-}
-
-function renderMailLog(){
-    mailLogEl.innerHTML='';
-    mailLog.forEach(item=>{
-        const div=document.createElement('div');
-        div.className='mail-log-item';
-        div.innerHTML=`
-            <div class="log-info">
-                <strong>${item.title}</strong>
-                <span>${item.subject}</span>
-                <span>${item.code ? 'Code: '+item.code : ''}</span>
-                <span>${item.time}</span>
-            </div>
-            ${item.code ? '' : `<button onclick="window.open('${item.url}','_blank')">Open Link</button>`}
-        `;
-        mailLogEl.appendChild(div);
-    });
-}
-
-function refreshLog(){ renderMailLog(); }
-
-// ===============================
-// 自動取得
-// ===============================
-setInterval(fetchMail,5000);
-</script>
+</div>
 </body>
 </html>
